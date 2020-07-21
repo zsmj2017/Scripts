@@ -12,7 +12,6 @@ def parseArgs():
     args = argParser.parse_args()
     return args
 
-# 执行cppLint.sh
 def runShellScript(shellScript):
     if os.path.exists(shellScript):
         subprocess.Popen(shellScript, shell=True)
@@ -35,4 +34,3 @@ if __name__ == '__main__':
     args = parseArgs()
     runShellScript(args.script)
     processShellScriptOuput(args.input, args.output)
-    

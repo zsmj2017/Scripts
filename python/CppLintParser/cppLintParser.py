@@ -75,14 +75,14 @@ class Parser():
                 else:
                     self.files[fileName] = CppLintFile(fileName)
                     self.files[fileName].addContent(line)
-        # real parse implemetion            
+        # real parse implementation           
         for lintFile in self.files.values():
             lintFile.parse()
         self.isParsed = True
         return
 
     def output(self, path):
-        if (self.isParsed == False):
+        if not self.isParsed:
             print("Parse has not been performed")
             assert(False)
         for lintFile in self.files.values():
