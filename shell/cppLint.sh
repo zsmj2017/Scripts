@@ -16,6 +16,7 @@ cppLint() {
     cpplint --counting=detailed \
             --filter=-legal/copyright \
             --quiet \
+            --verbose=3 \
             $cppFiles \
             2>$THIS_SCRIPT_PATH/cppLint_output.txt
 }
