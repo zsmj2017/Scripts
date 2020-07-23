@@ -57,7 +57,6 @@ class Parser():
     def __init__(self):
         self.files = {}
         self.isParsed = False
-        return
        
     def clear(self):
         self.files.clear()
@@ -70,11 +69,9 @@ class Parser():
             lines = fin.readlines()
             for line in lines:
                 fileName = line.split("  ")[0].split(":")[0]
-                if fileName in self.files:
-                    self.files[fileName].addContent(line)
-                else:
+                if not fileName in self.files:
                     self.files[fileName] = CppLintFile(fileName)
-                    self.files[fileName].addContent(line)
+                self.files[fileName].addContent(line)
         # real parse implementation           
         for lintFile in self.files.values():
             lintFile.parse()
