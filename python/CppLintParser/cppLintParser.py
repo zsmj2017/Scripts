@@ -1,33 +1,40 @@
 import os
 
+
 class CppLintError:
+
     def __init__(self, cppLintLine):
         assert cppLintLine
         # location start from 1
-        self.location = 0 
+        self.location = 0
         self.category = ""
         self.description = ""
         # verbose:a number 0-5 to restrict errors to certain verbosity levels
-        self.verbose = -1 
+        self.verbose = -1
         self.parse(cppLintLine)
 
     def removeSquareBrackets(string):
-        string = string.replace('[','')
-        string = string.replace(']','')
+        string = string.replace('[', '')
+        string = string.replace(']', '')
         return string
-    
+
     def parse(self, cppLintLine):
-        (location, self.description, categoryAndVerbose) = cppLintLine.strip().split("  ")
+        (location, self.description,
+         categoryAndVerbose) = cppLintLine.strip().split("  ")
         self.location = location.split(':')[1]
-        categoryAndVerbose = CppLintError.removeSquareBrackets(categoryAndVerbose)
+        categoryAndVerbose = CppLintError.removeSquareBrackets(
+            categoryAndVerbose)
         self.category = categoryAndVerbose.split(' ')[0]
         self.verbose = categoryAndVerbose.split(' ')[1]
-    
+
     def output(self):
-        res = '\t'.join([self.location, self.category, self.description, self.verbose])
+        res = '\t'.join(
+            [self.location, self.category, self.description, self.verbose])
         return res
 
+
 class CppLintFile:
+
     def __init__(self, filePath):
         assert filePath
         # store cpp files's path, will be needed in future
@@ -36,7 +43,7 @@ class CppLintFile:
         self.fileName = os.path.basename(self.path).split('.')[0]
         self.errors = []
         self.content = []
-       
+
     def parse(self):
         for line in self.content:
             self.errors.append(CppLintError(line))
@@ -51,13 +58,15 @@ class CppLintFile:
         textFilePath = os.path.join(path, textFileName)
         with open(textFilePath, 'w') as fout:
             for error in self.errors:
-                fout.write(''.join([error.output(),'\n']))
-        
+                fout.write(''.join([error.output(), '\n']))
+
+
 class Parser():
+
     def __init__(self):
         self.files = {}
         self.isParsed = False
-       
+
     def clear(self):
         self.files.clear()
         self.isParsed = False
@@ -72,7 +81,7 @@ class Parser():
                 if not fileName in self.files:
                     self.files[fileName] = CppLintFile(fileName)
                 self.files[fileName].addContent(line)
-        # real parse implementation           
+        # real parse implementation
         for lintFile in self.files.values():
             lintFile.parse()
         self.isParsed = True
@@ -81,7 +90,7 @@ class Parser():
     def output(self, path):
         if not self.isParsed:
             print("Parse has not been performed")
-            assert(False)
+            assert False
         for lintFile in self.files.values():
             lintFile.output(path)
         return
