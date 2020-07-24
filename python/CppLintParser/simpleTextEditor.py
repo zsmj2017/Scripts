@@ -160,7 +160,7 @@ class Editor(tk.Tk):
         self.configure(menu=self.menubar)
 
         self.line_numbers = tk.Text(self, bg="lightgrey", fg="black", width=6)
-        self.line_numbers.insert("end","1\n")
+        self.line_numbers.insert("end", "1\n")
         self.line_numbers.configure(state="disabled")
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
@@ -176,6 +176,8 @@ class Editor(tk.Tk):
             undo=True)
         self.main_text.pack(expand=1, fill=tk.BOTH)
         self.main_text.bind("<Tab>", self.insert_spaces)
+        set_unsaved_flag = partial(self.updateTitle, is_saved=False)
+        self.main_text.bind("<Key>", set_unsaved_flag)
         self.main_text.bind("<KeyRelease>", self.update_line_numbers)
         self.main_text.bind("<MouseWheel>", self.scroll_text_and_line_numbers)
         self.main_text.bind("<Button-4>", self.scroll_text_and_line_numbers)
@@ -213,19 +215,23 @@ class Editor(tk.Tk):
 
     def edit_cut(self, event=None):
         self.main_text.event_generate("<<Cut>>")
+        self.updateTitle(None, False)
         return "break"
 
     def edit_paste(self, event=None):
         self.main_text.event_generate("<<Paste>>")
+        self.updateTitle(None, False)
         self.update_line_numbers()
         return "break"
 
     def edit_undo(self, event=None):
         self.main_text.event_generate("<<Undo>>")
+        self.updateTitle(None, False)
         return "break"
 
     def edit_redo(self, event=None):
         self.main_text.event_generate("<<Redo>>")
+        self.updateTitle(None, False)
         return "break"
 
     def initCtrlKeyName(self):
@@ -255,6 +261,7 @@ class Editor(tk.Tk):
                         self.main_text.insert(index, line)
 
             self.update_line_numbers()
+            self.updateTitle()
 
     def file_save(self, event=None):
         if not self.open_file:
@@ -266,6 +273,7 @@ class Editor(tk.Tk):
             new_contents = self.main_text.get(1.0, tk.END)
             with open(self.open_file, "w") as open_file:
                 open_file.write(new_contents)
+            self.updateTitle()
 
     def select_all(self, event=None):
         self.main_text.tag_add("sel", 1.0, tk.END)
@@ -276,10 +284,10 @@ class Editor(tk.Tk):
         self.main_text.insert(tk.INSERT, "    ")
         return "break"
 
-    def set_saved_flag(self, event=None, is_saved=False):
-        if event:
+    def updateTitle(self, event=None, is_saved=False):
+        if event:  # call by key event, should set unsaved
             self.is_saved = is_saved
-        else:
+        else:  # call by operation such as open/new file
             self.is_saved = True
         savedFlag = ''
         if not self.is_saved:
@@ -287,31 +295,34 @@ class Editor(tk.Tk):
         if self.open_file:
             self.title(
                 " - ".join([self.WINDOW_TITLE, self.open_file]) + savedFlag)
-        self.update_line_numbers()
 
     def update_line_numbers(self, event=None):
         self.line_numbers.configure(state="normal")
         # get real line num
-        old_num_of_lines = int(self.line_numbers.index(tk.END).split(".")[0]) - 1
-        cur_number_of_lines = int(self.main_text.index(tk.END).split(".")[0]) - 1
-        offset = cur_number_of_lines - old_num_of_lines + 1
+        # the last num line must be a single '\n'
+        old_num_of_lines = int(self.line_numbers.index(
+            tk.END).split(".")[0]) - 1
+        cur_number_of_lines = int(self.main_text.index(
+            tk.END).split(".")[0])
+        offset = cur_number_of_lines - old_num_of_lines
         # calculate offset
         if (offset == 0):
             return
         if (offset > 0):
-            line_number_string = "".join(str(num) + '\n' for num in range(old_num_of_lines, cur_number_of_lines + 1))
+            # insert content such as "2\n3\n" ....
+            line_number_string = "".join(
+                str(num) + '\n'
+                for num in range(old_num_of_lines, cur_number_of_lines))
             self.line_numbers.insert("end", line_number_string)
         if (offset < 0):
-            for i in range((-offset + 1)):
+            for _ in range((-offset)):
                 line_number_string = self.line_numbers.get("end-1l", "end")
                 # fix bug about cur_line only contain a '\n'
                 if line_number_string == "\n":
                     self.line_numbers.delete("end-1l", "end")
-                self.line_numbers.delete("end-1l", "end") 
-        cur_number_of_lines = int(self.main_text.index(tk.END).split(".")[0]) - 1
-        # if there is no num in thenum line, add '1' into it
-        if cur_number_of_lines == 1:
-            self.line_numbers.insert("end","1\n")
+                self.line_numbers.delete("end-1l", "end")
+            # add '\n' into num line
+            self.line_numbers.insert("end", "\n")
         self.line_numbers.configure(state="disabled")
 
     def show_find_window(self, event=None):
