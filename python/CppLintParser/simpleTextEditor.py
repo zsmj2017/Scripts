@@ -215,23 +215,19 @@ class Editor(tk.Tk):
 
     def edit_cut(self, event=None):
         self.main_text.event_generate("<<Cut>>")
-        self.updateTitle(None, False)
         return "break"
 
     def edit_paste(self, event=None):
         self.main_text.event_generate("<<Paste>>")
-        self.updateTitle(None, False)
         self.update_line_numbers()
         return "break"
 
     def edit_undo(self, event=None):
         self.main_text.event_generate("<<Undo>>")
-        self.updateTitle(None, False)
         return "break"
 
     def edit_redo(self, event=None):
         self.main_text.event_generate("<<Redo>>")
-        self.updateTitle(None, False)
         return "break"
 
     def initCtrlKeyName(self):
