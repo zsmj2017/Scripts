@@ -160,7 +160,7 @@ class Editor(tk.Tk):
         self.configure(menu=self.menubar)
 
         self.line_numbers = tk.Text(self, bg="lightgrey", fg="black", width=6)
-        self.line_numbers.insert(1.0, "1 \n")
+        self.line_numbers.insert("end","1\n")
         self.line_numbers.configure(state="disabled")
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
@@ -291,11 +291,27 @@ class Editor(tk.Tk):
 
     def update_line_numbers(self, event=None):
         self.line_numbers.configure(state="normal")
-        self.line_numbers.delete(1.0, tk.END)
-        number_of_lines = self.main_text.index(tk.END).split(".")[0]
-        line_number_string = "\n".join(
-            str(no + 1) for no in range(int(number_of_lines)))
-        self.line_numbers.insert(1.0, line_number_string)
+        # get real line num
+        old_num_of_lines = int(self.line_numbers.index(tk.END).split(".")[0]) - 1
+        cur_number_of_lines = int(self.main_text.index(tk.END).split(".")[0]) - 1
+        offset = cur_number_of_lines - old_num_of_lines + 1
+        # calculate offset
+        if (offset == 0):
+            return
+        if (offset > 0):
+            line_number_string = "".join(str(num) + '\n' for num in range(old_num_of_lines, cur_number_of_lines + 1))
+            self.line_numbers.insert("end", line_number_string)
+        if (offset < 0):
+            for i in range((-offset + 1)):
+                line_number_string = self.line_numbers.get("end-1l", "end")
+                # fix bug about cur_line only contain a '\n'
+                if line_number_string == "\n":
+                    self.line_numbers.delete("end-1l", "end")
+                self.line_numbers.delete("end-1l", "end") 
+        cur_number_of_lines = int(self.main_text.index(tk.END).split(".")[0]) - 1
+        # if there is no num in thenum line, add '1' into it
+        if cur_number_of_lines == 1:
+            self.line_numbers.insert("end","1\n")
         self.line_numbers.configure(state="disabled")
 
     def show_find_window(self, event=None):
