@@ -13,46 +13,49 @@ class FindPopup(tk.Toplevel):
 
         self.master = master
 
-        self.title("Find in file")
+        self.title("Find/Replace in file")
         self.center_window()
+        self.rowconfigure(2, weight=1)
+        self.columnconfigure(4, weight=1)
 
         self.transient(master)
 
         self.matches_are_highlighted = False
 
-        self.main_frame = tk.Frame(self, bg="lightgrey")
-        self.button_frame = tk.Frame(self.main_frame, bg="lightgrey")
-
-        self.find_label = tk.Label(
-            self.main_frame, text="Find: ", bg="lightgrey", fg="black")
-        self.find_entry = tk.Entry(self.main_frame, bg="white", fg="black")
-        self.find_button = tk.Button(
-            self.button_frame,
+        self.find_label = tk.Label(self, text="Find: ")
+        self.find_label.grid(column=0, row=0, sticky='NESW')
+        self.replace_label = tk.Label(self, text="Replace: ")
+        self.replace_label.grid(column=0, row=1, sticky='NESW')
+        self.find_entry = tk.Entry(self, bg="white", fg="black")
+        self.find_entry.grid(column=1, row=0, sticky='NESW')
+        self.replace_entry = tk.Entry(self, bg="white", fg="black")
+        self.replace_entry.grid(column=1, row=1, sticky='NESW')
+        self.find_all_button = tk.Button(
+            self,
             text="Find All",
             bg="lightgrey",
             fg="black",
             command=self.find)
-        self.next_button = tk.Button(
-            self.button_frame,
-            text="Next",
+        self.find_all_button.grid(column=2, row=0, sticky='NESW')
+        # TODO::
+        self.replace_all_button = tk.Button(
+            self, text="Replace All", bg="lightgrey", fg="black", command=None)
+        self.replace_all_button.grid(column=2, row=1, sticky='NESW')
+        self.find_button = tk.Button(
+            self,
+            text="Find",
             bg="lightgrey",
             fg="black",
             command=self.jump_to_next_match)
-        self.cancel_button = tk.Button(
-            self.button_frame,
-            text="Cancel",
+        self.find_button.grid(column=3, row=0, sticky='NESW')
+        # TODO::
+        self.replace_button = tk.Button(
+            self,
+            text="Replace",
             bg="lightgrey",
             fg="black",
-            command=self.cancel)
-
-        self.main_frame.pack(fill=tk.BOTH, expand=1)
-
-        self.find_button.pack(side=tk.LEFT, pady=(0, 10), padx=(20, 20))
-        self.next_button.pack(side=tk.LEFT, pady=(0, 10), padx=(15, 20))
-        self.cancel_button.pack(side=tk.LEFT, pady=(0, 10), padx=(15, 0))
-        self.button_frame.pack(side=tk.BOTTOM, fill=tk.BOTH)
-        self.find_label.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0))
-        self.find_entry.pack(side=tk.LEFT, fill=tk.X, expand=1, padx=(0, 20))
+            command=self.replace_next_match)
+        self.replace_button.grid(column=3, row=1, sticky='NESW')
 
         self.find_entry.focus_force()
         self.find_entry.bind("<Return>", self.jump_to_next_match)
@@ -75,6 +78,10 @@ class FindPopup(tk.Toplevel):
                 self.find()
             self.master.next_match()
 
+    # TODO::
+    def replace_next_match(self, event=None):
+        return None
+
     def cancel(self, event=None):
         self.master.remove_all_find_tags()
         self.destroy()
@@ -91,8 +98,8 @@ class FindPopup(tk.Toplevel):
         master_width = self.master.winfo_width()
         master_height = self.master.winfo_height()
 
-        my_width = 300
-        my_height = 100
+        my_width = 430
+        my_height = 60
 
         pos_x = (master_pos_x + (master_width // 2)) - (my_width // 2)
         pos_y = (master_pos_y + (master_height // 2)) - (my_height // 2)
@@ -298,8 +305,7 @@ class Editor(tk.Tk):
         # the last num line must be a single '\n'
         old_num_of_lines = int(self.line_numbers.index(
             tk.END).split(".")[0]) - 1
-        cur_number_of_lines = int(self.main_text.index(
-            tk.END).split(".")[0])
+        cur_number_of_lines = int(self.main_text.index(tk.END).split(".")[0])
         offset = cur_number_of_lines - old_num_of_lines
         # calculate offset
         if (offset == 0):
