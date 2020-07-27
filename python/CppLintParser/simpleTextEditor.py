@@ -36,26 +36,28 @@ class FindPopup(tk.Toplevel):
             bg="lightgrey",
             fg="black",
             command=self.find)
-        self.find_all_button.grid(column=2, row=0, sticky='NESW')
-        # TODO::
+        self.find_all_button.grid(column=3, row=0, sticky='NESW')
         self.replace_all_button = tk.Button(
-            self, text="Replace All", bg="lightgrey", fg="black", command=self.replace_all)
-        self.replace_all_button.grid(column=2, row=1, sticky='NESW')
+            self,
+            text="Replace All",
+            bg="lightgrey",
+            fg="black",
+            command=self.replace_all)
+        self.replace_all_button.grid(column=3, row=1, sticky='NESW')
         self.find_button = tk.Button(
             self,
             text="Find",
             bg="lightgrey",
             fg="black",
             command=self.jump_to_next_match)
-        self.find_button.grid(column=3, row=0, sticky='NESW')
-        # TODO::
+        self.find_button.grid(column=2, row=0, sticky='NESW')
         self.replace_button = tk.Button(
             self,
             text="Replace",
             bg="lightgrey",
             fg="black",
             command=self.replace_next_match)
-        self.replace_button.grid(column=3, row=1, sticky='NESW')
+        self.replace_button.grid(column=2, row=1, sticky='NESW')
 
         self.find_entry.focus_force()
         self.find_entry.bind("<Return>", self.jump_to_next_match)
@@ -85,9 +87,13 @@ class FindPopup(tk.Toplevel):
             self.master.remove_all_find_tags()
             self.master.replace_matches(text_to_find, text_to_replace)
 
-    # TODO::
     def replace_next_match(self, event=None):
-        return None
+        text_to_find = self.find_entry.get()
+        text_to_replace = self.replace_entry.get()
+        if text_to_find:
+            if not self.matches_are_highlighted:
+                self.find()
+            self.master.replace_next_match(text_to_replace)
 
     def cancel(self, event=None):
         self.master.remove_all_find_tags()
@@ -356,13 +362,22 @@ class Editor(tk.Tk):
 
     def replace_matches(self, text_to_find, text_to_replace):
         self.main_text.tag_remove("findmatch", 1.0, tk.END)
-        old_text_lines = self.main_text.get(1.0, tk.END)
-        new_text_lines = re.sub(text_to_find, text_to_replace, old_text_lines, count=0, flags=0)
 
-        self.main_text.delete(1.0, tk.END)
-        self.main_text.insert(tk.END, new_text_lines)
-
-        # TODO:: need highlight all text_to_replace
+        # replace and highlight all replaced text
+        find_regex = re.compile(text_to_find)
+        search_text_lines = self.main_text.get(1.0, tk.END).split("\n")
+        for line_number, line in enumerate(search_text_lines):
+            line_number += 1
+            for match in find_regex.finditer(line):
+                start, end = match.span()
+                start_index = ".".join([str(line_number), str(start)])
+                end_index = ".".join([str(line_number), str(end)])
+                self.main_text.delete(start_index, end_index)
+                self.main_text.insert(start_index, text_to_replace)
+                end = int(str(end_index).split('.')[-1]) + len(
+                    text_to_replace) - len(text_to_find)
+                end_index = ".".join([str(line_number), str(end)])
+                self.main_text.tag_add("findmatch", start_index, end_index)
 
     def next_match(self, event=None):
         try:
@@ -390,6 +405,30 @@ class Editor(tk.Tk):
             self.main_text.tag_remove("findmatch", next_target, target_end)
             self.main_text.tag_add("sel", next_target, target_end)
             self.main_text.see(next_target)
+
+    def replace_next_match(self, text_to_replace):
+        self.next_match()
+        try:
+            current_target, current_target_end = self.match_coordinates[
+                self.current_match]
+            self.main_text.delete(current_target, current_target_end)
+            self.main_text.insert(current_target, text_to_replace)
+
+            _, end_col = current_target_end.split('.')
+            _, start_col = current_target.split('.')
+            find_text_len = int(end_col) - int(start_col)
+            end_col = end_col + len(text_to_replace) - find_text_len
+            current_target_end = ".".join(
+                [str(current_target.split('.')[0]),
+                 str(end_col)])
+
+            self.main_text.tag_add("sel", current_target, current_target_end)
+            self.main_text.see(current_target)
+            self.match_coordinates[
+                self.current_match] = current_target, current_target_end
+
+        except IndexError:
+            pass
 
     def remove_all_find_tags(self):
         self.main_text.tag_remove("findmatch", 1.0, tk.END)
