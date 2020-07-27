@@ -39,7 +39,7 @@ class FindPopup(tk.Toplevel):
         self.find_all_button.grid(column=2, row=0, sticky='NESW')
         # TODO::
         self.replace_all_button = tk.Button(
-            self, text="Replace All", bg="lightgrey", fg="black", command=None)
+            self, text="Replace All", bg="lightgrey", fg="black", command=self.replace_all)
         self.replace_all_button.grid(column=2, row=1, sticky='NESW')
         self.find_button = tk.Button(
             self,
@@ -77,6 +77,13 @@ class FindPopup(tk.Toplevel):
             if not self.matches_are_highlighted:
                 self.find()
             self.master.next_match()
+
+    def replace_all(self, event=None):
+        text_to_find = self.find_entry.get()
+        text_to_replace = self.replace_entry.get()
+        if text_to_find and text_to_replace:
+            self.master.remove_all_find_tags()
+            self.master.replace_matches(text_to_find, text_to_replace)
 
     # TODO::
     def replace_next_match(self, event=None):
@@ -167,7 +174,7 @@ class Editor(tk.Tk):
         self.configure(menu=self.menubar)
 
         self.line_numbers = tk.Text(self, bg="lightgrey", fg="black", width=6)
-        self.line_numbers.insert("end", "1\n")
+        self.line_numbers.insert(tk.END, "1\n")
         self.line_numbers.configure(state="disabled")
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
@@ -315,16 +322,16 @@ class Editor(tk.Tk):
             line_number_string = "".join(
                 str(num) + '\n'
                 for num in range(old_num_of_lines, cur_number_of_lines))
-            self.line_numbers.insert("end", line_number_string)
+            self.line_numbers.insert(tk.END, line_number_string)
         if (offset < 0):
             for _ in range((-offset)):
-                line_number_string = self.line_numbers.get("end-1l", "end")
+                line_number_string = self.line_numbers.get("end-1l", tk.END)
                 # fix bug about cur_line only contain a '\n'
                 if line_number_string == "\n":
-                    self.line_numbers.delete("end-1l", "end")
-                self.line_numbers.delete("end-1l", "end")
+                    self.line_numbers.delete("end-1l", tk.END)
+                self.line_numbers.delete("end-1l", tk.END)
             # add '\n' into num line
-            self.line_numbers.insert("end", "\n")
+            self.line_numbers.insert(tk.END, "\n")
         self.line_numbers.configure(state="disabled")
 
     def show_find_window(self, event=None):
@@ -346,6 +353,16 @@ class Editor(tk.Tk):
                 end_index = ".".join([str(line_number), str(end)])
                 self.main_text.tag_add("findmatch", start_index, end_index)
                 self.match_coordinates.append((start_index, end_index))
+
+    def replace_matches(self, text_to_find, text_to_replace):
+        self.main_text.tag_remove("findmatch", 1.0, tk.END)
+        old_text_lines = self.main_text.get(1.0, tk.END)
+        new_text_lines = re.sub(text_to_find, text_to_replace, old_text_lines, count=0, flags=0)
+
+        self.main_text.delete(1.0, tk.END)
+        self.main_text.insert(tk.END, new_text_lines)
+
+        # TODO:: need highlight all text_to_replace
 
     def next_match(self, event=None):
         try:
