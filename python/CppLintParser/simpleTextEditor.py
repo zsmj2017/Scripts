@@ -179,7 +179,7 @@ class Editor(tk.Tk):
 
         self.configure(menu=self.menubar)
 
-        self.line_numbers = tk.Text(self, bg="lightgrey", fg="black", width=6)
+        self.line_numbers = tk.Text(self, bg="lightgrey", fg="black", font=("Ubuntu Mono", self.FONT_SIZE), width=6)
         self.line_numbers.insert(tk.END, "1\n")
         self.line_numbers.configure(state="disabled")
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
