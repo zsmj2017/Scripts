@@ -405,6 +405,7 @@ class Editor(tk.Tk):
             self.main_text.tag_remove("findmatch", next_target, target_end)
             self.main_text.tag_add("sel", next_target, target_end)
             self.main_text.see(next_target)
+            self.line_numbers.see(next_target)
 
     def replace_next_match(self, text_to_replace):
         self.next_match()
@@ -424,6 +425,7 @@ class Editor(tk.Tk):
 
             self.main_text.tag_add("sel", current_target, current_target_end)
             self.main_text.see(current_target)
+            self.line_numbers.see(current_target)
             self.match_coordinates[
                 self.current_match] = current_target, current_target_end
 
