@@ -258,9 +258,11 @@ class Editor(tk.Tk):
             self.ctrlKeyName = "Control"
 
     def file_new(self, event=None):
-        file_name = filedialog.asksaveasfilename()
-        self.open_file = file_name
+        self.file_save()
+        self.open_file = ''
         self.main_text.delete(1.0, tk.END)
+        self.updateTitle()
+        self.update_line_numbers()
 
     def file_open(self, event=None):
         file_to_open = filedialog.askopenfilename()
@@ -309,9 +311,11 @@ class Editor(tk.Tk):
         if not self.is_saved:
             savedFlag = ' *'
         if self.open_file:
-            self.title(
-                " - ".join([self.WINDOW_TITLE, self.open_file]) + savedFlag)
-
+            title = " - ".join([self.WINDOW_TITLE, self.open_file]) + savedFlag
+        else:
+            title = self.WINDOW_TITLE
+        self.title(title)
+            
     def update_line_numbers(self, event=None):
         self.line_numbers.configure(state="normal")
         # get real line num
