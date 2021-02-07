@@ -1,0 +1,13 @@
+#!/bin/sh
+THIS_SCRIPT_PATH=`git rev-parse --show-toplevel`
+
+format() {
+echo "~~~ Start Code Format In $THIS_SCRIPT_PATH ~~~"
+for f in $(find $THIS_SCRIPT_PATH -name '*.h' -or -name '*.c' -or -name '*.cpp'); do 
+    echo "format ${f}"
+    clang-format -style=google -sort-includes=true -i ${f}
+done
+echo "~~~ Code Format Done ~~~"
+}
+
+format
